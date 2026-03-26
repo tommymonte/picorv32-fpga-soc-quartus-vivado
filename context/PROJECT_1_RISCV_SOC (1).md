@@ -4,7 +4,7 @@
 
 Design and simulate a minimal RISC-V System-on-Chip on an Intel Cyclone V FPGA, featuring a PicoRV32 softcore processor, on-chip memory, and an I2C peripheral with bare-metal C drivers. Port an existing VGA controller to AMD Vivado to demonstrate cross-toolchain proficiency.
 
-This project directly addresses three skill areas required by CERN EP-LCB-2026-89-GRAE:
+This project directly addresses three skill areas
 
 - RISC-V ISA and FPGA softcores (PicoRV32)
 - Hardware/software co-design
