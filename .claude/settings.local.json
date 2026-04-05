@@ -7,7 +7,10 @@
       "Bash(git push:*)",
       "Bash(gh repo:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "Bash(make clean:*)",
+      "Bash(make all:*)",
+      "Bash(riscv64-unknown-elf-objdump -d -M no-aliases fw.elf)"
     ]
   }
 }
