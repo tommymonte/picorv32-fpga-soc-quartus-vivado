@@ -14,8 +14,7 @@ SIZE    := $(CROSS)-size
 ARCH    := -march=rv32imc -mabi=ilp32
 
 # ── Source files ───────────────────────────────────────────────────────────
-# Phase 1: start.S + main.c only (add i2c_driver.c in Phase 2)
-SRCS    := start.S main.c
+SRCS    := start.S main.c i2c_driver.c
 
 # ── Build flags ────────────────────────────────────────────────────────────
 CFLAGS  := $(ARCH) -nostdlib -ffreestanding -O1 -Wall -Wextra

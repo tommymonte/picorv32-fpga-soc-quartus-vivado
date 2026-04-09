@@ -1,7 +1,7 @@
 -- mem_bus.vhd — Memory Bus / Address Decoder
 -- Sits between PicoRV32 CPU and all memory-mapped slaves.
 -- Combinatorial address decoder + mem_ready multiplexer.
--- I2C controller instantiation deferred to step 13.
+-- Step 13: i2c_controller fully integrated.
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -40,9 +40,15 @@ architecture rtl of mem_bus is
     signal ram_rdata : std_logic_vector(31 downto 0);
     signal ram_ready : std_logic;
 
-    -- I2C stub signals (will be driven by i2c_controller in step 13)
-    signal i2c_rdata : std_logic_vector(31 downto 0);
-    signal i2c_ready : std_logic;
+    -- I2C controller interface signals
+    signal i2c_rdata   : std_logic_vector(31 downto 0);
+    signal i2c_ready   : std_logic;
+
+    -- I2C write/read enable — intermediate signals to avoid boolean/std_logic
+    -- mismatch in port map (M-02 fix) and Verilog reduction syntax (M-01 fix)
+    signal i2c_we_strb : std_logic;  -- any write strobe asserted
+    signal i2c_wen     : std_logic;
+    signal i2c_ren     : std_logic;
 
     -- GPIO register
     signal gpio_reg  : std_logic_vector(31 downto 0);
@@ -77,14 +83,30 @@ begin
         );
 
     ---------------------------------------------------------------------------
-    -- I2C controller — stub until step 13
-    -- Selecting the I2C range will not assert ready (CPU stalls),
-    -- which is safe because firmware does not access I2C yet.
+    -- I2C write/read enable decode (M-01 + M-02 fixes applied)
+    -- M-01: use explicit bit OR instead of reduction operator
+    -- M-02: use std_logic intermediate signal instead of boolean comparison
     ---------------------------------------------------------------------------
-    i2c_rdata <= (others => '0');
-    i2c_ready <= '0';
-    i2c_scl   <= 'Z';
-    i2c_sda   <= 'Z';
+    i2c_we_strb <= mem_wstrb(3) or mem_wstrb(2) or mem_wstrb(1) or mem_wstrb(0);
+    i2c_wen     <= sel_i2c and mem_valid and i2c_we_strb;
+    i2c_ren     <= sel_i2c and mem_valid and (not i2c_we_strb);
+
+    ---------------------------------------------------------------------------
+    -- I2C controller instantiation
+    ---------------------------------------------------------------------------
+    u_i2c : entity work.i2c_controller
+        port map (
+            clk   => clk,
+            rst   => rst,
+            addr  => mem_addr(3 downto 2),   -- selects one of 4 registers
+            wdata => mem_wdata(7 downto 0),  -- 8-bit write data
+            rdata => i2c_rdata,
+            wen   => i2c_wen,
+            ren   => i2c_ren,
+            ready => i2c_ready,
+            scl   => i2c_scl,
+            sda   => i2c_sda
+        );
 
     ---------------------------------------------------------------------------
     -- GPIO output register
